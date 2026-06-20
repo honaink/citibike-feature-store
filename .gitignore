@@ -1,0 +1,11 @@
+data/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.env
+infra/terraform/.terraform/
+infra/terraform/*.tfstate*
+infra/terraform/*.tfvars
+!infra/terraform/*.tfvars.example
+.ruff_cache/
+.idea/

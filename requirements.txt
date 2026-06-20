@@ -1,0 +1,10 @@
+# Pinned to the versions the demo was built and tested with.
+# pyspark must match the EMR Serverless release in infra/terraform (emr-7.14.0 = Spark 3.5.8).
+feast[aws,redis,duckdb]==0.66.0
+pyspark==3.5.8
+lightgbm==4.7.0
+confluent-kafka==2.15.1
+aws-msk-iam-sasl-signer-python==1.0.2
+streamlit==1.64.0
+requests>=2.32
+pytest>=8

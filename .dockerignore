@@ -1,0 +1,5 @@
+data
+infra/terraform
+.git
+**/__pycache__
+**/.pytest_cache
