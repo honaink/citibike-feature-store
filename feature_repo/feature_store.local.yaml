@@ -1,0 +1,10 @@
+# Local profile: Parquet + DuckDB offline, Redis online. Selected with CITIBIKE_ENV=local.
+project: citibike
+provider: local
+registry: ${DATA_ROOT}/feast/registry.db
+offline_store:
+  type: duckdb
+online_store:
+  type: redis
+  connection_string: ${REDIS_CONNECTION_STRING}
+entity_key_serialization_version: 3
