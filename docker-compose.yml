@@ -1,0 +1,84 @@
+# Local stack. `make demo` runs the whole sequence; see the README.
+
+x-app: &app
+  image: citibike-fs:local
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  environment:
+    CITIBIKE_ENV: local
+    CITIBIKE_SCOPE: ${CITIBIKE_SCOPE:-jc}
+    TRIP_MONTHS: ${TRIP_MONTHS:-3}
+    DATA_ROOT: /data
+    KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+    REDIS_CONNECTION_STRING: redis:6379
+    API_URL: http://api:8000
+  volumes:
+    - ./data:/data
+    # Mounted so code changes take effect without rebuilding the image.
+    - ./src:/app/src
+    - ./feature_repo:/app/feature_repo
+    - ./tests:/app/tests
+
+x-service: &service
+  <<: *app
+  restart: unless-stopped
+  depends_on:
+    redpanda: { condition: service_healthy }
+    redis: { condition: service_healthy }
+
+services:
+  redpanda:
+    image: redpandadata/redpanda:v26.2.3
+    command:
+      - redpanda
+      - start
+      - --mode=dev-container
+      - --smp=1
+      - --memory=512M
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda:9092,external://localhost:19092
+    ports: ["19092:19092"]
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "health", "--exit-when-healthy"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+
+  # One-off commands: `docker compose run --rm jobs <command>`.
+  jobs:
+    <<: *app
+    profiles: ["jobs"]
+
+  poller:
+    <<: *service
+    command: python -m citibike_fs.ingest.poller
+
+  replayer:
+    <<: *service
+    command: python -m citibike_fs.ingest.replayer
+
+  streaming:
+    <<: *service
+    command: python -m citibike_fs.spark.streaming_features
+
+  api:
+    <<: *service
+    command: uvicorn citibike_fs.serving.api:app --host 0.0.0.0 --port 8000
+    ports: ["8000:8000"]
+
+  dashboard:
+    <<: *service
+    command: >
+      streamlit run src/citibike_fs/dashboard/app.py
+      --server.address=0.0.0.0 --server.port=8501 --server.headless=true
+      --browser.gatherUsageStats=false
+    ports: ["8501:8501"]
