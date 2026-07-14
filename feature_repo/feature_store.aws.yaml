@@ -1,0 +1,15 @@
+# AWS profile: S3 + Athena offline, DynamoDB online. Selected with CITIBIKE_ENV=aws.
+project: citibike
+provider: aws
+registry: ${DATA_ROOT}/feast/registry.db
+offline_store:
+  type: athena
+  region: ${AWS_REGION}
+  database: ${ATHENA_DATABASE}
+  data_source: AwsDataCatalog
+  workgroup: ${ATHENA_WORKGROUP}
+  s3_staging_location: ${DATA_ROOT}/athena/staging
+online_store:
+  type: dynamodb
+  region: ${AWS_REGION}
+entity_key_serialization_version: 3

@@ -1,0 +1,6 @@
+# Driver-side dependencies of the Spark jobs on EMR Serverless.
+# pyspark is deliberately absent: the EMR runtime provides it.
+feast[aws]==0.66.0
+confluent-kafka==2.15.1
+aws-msk-iam-sasl-signer-python==1.0.2
+requests>=2.32
